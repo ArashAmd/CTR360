@@ -1,0 +1,64 @@
+name: Build CTR360 Xbox 360 boot test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'native/**'
+      - '.github/workflows/build-xbox360.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Check project files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f native/Makefile
+          test -f native/source/main.c
+          test -f native/build_in_docker.sh
+          echo "Project files are present."
+
+      - name: Build with the official LibXenon container
+        id: build
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p build-logs
+          set +e
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/app" \
+            -w /app/native \
+            free60/libxenon:latest \
+            sh -lc 'set -eux; echo "DEVKITXENON=${DEVKITXENON:-unset}"; command -v xenon-gcc; test -n "${DEVKITXENON:-}"; test -f "$DEVKITXENON/rules"; make clean all; test -s ctr360_boot_test.elf32; file ctr360_boot_test.elf32' \
+            2>&1 | tee build-logs/libxenon-build.log
+          status=${PIPESTATUS[0]}
+          set -e
+          echo "build_exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
+
+      - name: Upload boot-test ELF artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctr360-xbox360-boot-test-elf32
+          path: native/ctr360_boot_test.elf32
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload build log if build fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctr360-xbox360-build-log
+          path: build-logs/libxenon-build.log
+          if-no-files-found: warn
+          retention-days: 14

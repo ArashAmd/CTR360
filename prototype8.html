@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CTR360 — نمونهٔ فنی سه‌بعدی ۱٫۱</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#9ed9f4;color:#fff;font-family:Tahoma,Arial,sans-serif}canvas{width:100%;height:100%;display:block}#panel{position:fixed;top:12px;right:12px;background:#111c;border:1px solid #ffffff55;border-radius:12px;padding:12px 15px;line-height:1.7;font-size:13px}#panel b{font-size:15px}#speed{font-size:24px;font-weight:bold}#note{position:fixed;bottom:12px;left:12px;background:#111c;border-radius:10px;padding:9px 12px;font-size:12px}
+#menu{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#08152beF,#123b50d9);backdrop-filter:blur(5px);padding:18px}
+#card{width:min(560px,95vw);background:#071421ed;border:1px solid #ffffff55;border-radius:20px;padding:24px;box-shadow:0 20px 80px #0008;text-align:center}
+#card h1{font-size:clamp(28px,6vw,48px);margin:0 0 5px;color:#ffcc36;text-shadow:0 3px 0 #9d3d1b}
+#card p{color:#d7e8f5;line-height:1.7;margin:8px 0 18px}
+.row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+.choice,.action{font-family:inherit;font-weight:bold;border:1px solid #ffffff55;border-radius:12px;padding:11px 14px;color:#fff;background:#20384b;cursor:pointer}
+.choice.active{outline:3px solid #ffcc36;background:#315b6b}.action{background:#e66a20;border:0;font-size:17px;padding:13px 28px;margin-top:10px}
+#menu small{display:block;color:#b7c9d8;margin-top:15px;line-height:1.6}
+#menu.hidden{display:none}
+#menu .label{color:#ffdf8b;font-weight:bold;margin-top:15px}
+#countdown{position:fixed;inset:0;z-index:4;display:none;align-items:center;justify-content:center;font-size:clamp(70px,18vw,170px);font-weight:900;color:#ffcf32;text-shadow:0 5px 0 #8f2d12,0 0 35px #000b;pointer-events:none}
+#countdown.show{display:flex}
+
+#minimap{position:fixed;right:12px;bottom:12px;width:170px;height:170px;border:1px solid #ffffff88;border-radius:14px;background:#071421cc;z-index:2}
+#touch{position:fixed;left:12px;bottom:12px;display:none;z-index:3;gap:7px;align-items:end;direction:ltr;touch-action:none}
+.touchcol{display:flex;gap:7px;flex-direction:column}.touchbtn{width:54px;height:54px;border-radius:50%;border:1px solid #ffffff99;background:#10283dcc;color:#fff;font-size:20px;font-weight:bold;touch-action:none;user-select:none}
+#finish{position:fixed;inset:0;z-index:6;display:none;align-items:center;justify-content:center;background:#071421bb;padding:18px}
+#finish.show{display:flex}#finishcard{background:#071421f2;border:2px solid #ffcc36;border-radius:20px;padding:28px;text-align:center;min-width:min(340px,85vw);box-shadow:0 18px 70px #0009}#finish h2{color:#ffcc36;font-size:36px;margin:0 0 10px}
+@media(max-width:700px){#touch{display:flex}#minimap{width:125px;height:125px;bottom:175px}#panel{font-size:11px;padding:8px 10px}#panel b{font-size:12px}#speed{font-size:19px}#note{font-size:10px;max-width:45vw}}
+</style></head>
+<body><canvas id="c"></canvas><div id="panel"><b>CTR360 — نمونهٔ فنی سه‌بعدی ۱٫۱</b><br>گاز: W / ↑ &nbsp; ترمز: S / ↓<br>فرمان: A,D / ←,→ &nbsp; دریفت: Space<br>آیتم: E / Enter &nbsp; ریست: R &nbsp; توقف: P<br><span id="item">آیتم: خالی</span><br><span id="fruit">میوه: ۰</span><br><span id="speed">سرعت: ۰</span><br><span id="lap">دور: ۱ / ۳</span><br><span id="position">جایگاه: ۴ / ۴</span><br><span id="timer">زمان: ۰۰:۰۰.۰۰</span><br><span id="turbo">توربو: آماده</span><br><span id="fps">FPS: —</span></div><div id="note">نمونهٔ مرورگری CTR360 v1.1؛ این فایل هنوز نسخهٔ Xbox 360 نیست.</div><div id="countdown"></div><div id="itemtoast" style="position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:4;display:none;background:#111d;border:2px solid #ffcf32;border-radius:14px;padding:12px 22px;font-size:24px;font-weight:bold;text-shadow:0 2px 4px #000"></div><canvas id="minimap" width="170" height="170" aria-label="نقشهٔ کوچک پیست"></canvas>
+<div id="touch"><div class="touchcol"><button class="touchbtn" data-key="a">◀</button><button class="touchbtn" data-key="d">▶</button></div><div class="touchcol"><button class="touchbtn" data-key="w">▲</button><button class="touchbtn" data-key="s">▼</button></div><button class="touchbtn" data-key=" ">⤿</button></div>
+<div id="finish"><div id="finishcard"><h2>🏁 مسابقه تمام شد!</h2><p id="finishsummary">آفرین! مسابقه به پایان رسید.</p><button class="action" id="finishrestart">مسابقهٔ دوباره</button></div></div>
+<div id="menu"><div id="card"><h1>CTR360</h1><p>مسابقهٔ کارتینگ سه‌بعدی — نمونهٔ مستقل با الهام از سبک بازی‌های کارتینگ</p>
+<div class="label">راننده‌ات رو انتخاب کن</div><div class="row" id="drivers">
+<button class="choice active" data-driver="0">🔥 قرمز</button><button class="choice" data-driver="1">💙 آبی</button><button class="choice" data-driver="2">⚡ زرد</button><button class="choice" data-driver="3">🌿 سبز</button></div>
+<div class="label">پیست رو انتخاب کن</div><div class="row" id="tracks"><button class="choice active" data-track="0">🌴 جزیرهٔ سبز</button><button class="choice" data-track="1">🏜️ درهٔ شنی</button><button class="choice" data-track="2">🌌 شب نئونی</button></div>
+<div class="label">سختی مسابقه</div><div class="row" id="difficulty"><button class="choice" data-difficulty="0">🌱 آسان</button><button class="choice active" data-difficulty="1">🏁 معمولی</button><button class="choice" data-difficulty="2">🔥 سخت</button></div>
+<button class="action" id="start">شروع مسابقه ▶</button><div class="row"><button class="choice" id="resume">ادامهٔ مسابقه</button><button class="choice" id="reset">شروع دوباره</button></div>
+<small>کنترل: W/↑ گاز، S/↓ ترمز، A و D فرمان، Space دریفت، E/Enter استفاده از آیتم، P توقف، R ریست<br>نسخهٔ مرورگری ۱٫۱؛ سختی مسابقه قابل انتخاب است و آیتم‌ها هنوز آزمایشی‌اند. فایل Xbox 360 هنوز ساخته نشده.</small></div></div>
+<script>
+(()=>{
+const canvas=document.getElementById('c'),gl=canvas.getContext('webgl',{antialias:true,alpha:false});
+if(!gl){document.getElementById('note').textContent='WebGL در این مرورگر در دسترس نیست.';return;}
+const vs=`attribute vec3 p; attribute vec3 col; uniform mat4 vp; uniform mat4 model; varying vec3 vcol; varying float shade; void main(){vec4 w=model*vec4(p,1.0);gl_Position=vp*w;vcol=col;vec3 n=normalize(mat3(model)*vec3(0.0,1.0,0.0));shade=0.65+0.35*max(dot(n,normalize(vec3(-0.35,0.9,0.25))),0.0);}`;
+const fs=`precision mediump float; varying vec3 vcol; varying float shade; void main(){gl_FragColor=vec4(vcol*shade,1.0);}`;
+function shader(type,src){let s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
+const prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,vs));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));gl.useProgram(prog);
+const loc={p:gl.getAttribLocation(prog,'p'),col:gl.getAttribLocation(prog,'col'),vp:gl.getUniformLocation(prog,'vp'),model:gl.getUniformLocation(prog,'model')};
+function mesh(vertices){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.STATIC_DRAW);return {b,count:vertices.length/6};}
+function addTri(a,b,c,color,out){for(const v of [a,b,c])out.push(v[0],v[1],v[2],color[0],color[1],color[2]);}
+function quad(a,b,c,d,color,out){addTri(a,b,c,color,out);addTri(a,c,d,color,out);}
+function cube(w,h,d,color){let x=w/2,y=h/2,z=d/2,o=[];const C=color;quad([-x,-y,z],[x,-y,z],[x,y,z],[-x,y,z],C,o);quad([x,-y,-z],[-x,-y,-z],[-x,y,-z],[x,y,-z],C,o);quad([-x,-y,-z],[-x,-y,z],[-x,y,z],[-x,y,-z],C,o);quad([x,-y,z],[x,-y,-z],[x,y,-z],[x,y,z],C,o);quad([-x,y,z],[x,y,z],[x,y,-z],[-x,y,-z],C,o);quad([-x,-y,-z],[x,-y,-z],[x,-y,z],[-x,-y,z],C,o);return mesh(o);}
+function trackMesh(outerX=43,outerZ=33,innerX=31,innerZ=21){let o=[],N=180;for(let i=0;i<N;i++){let a=i/N*Math.PI*2,b=(i+1)/N*Math.PI*2;let innerA=[Math.cos(a)*innerX,0.08,Math.sin(a)*innerZ],outerA=[Math.cos(a)*outerX,0.08,Math.sin(a)*outerZ],innerB=[Math.cos(b)*innerX,0.08,Math.sin(b)*innerZ],outerB=[Math.cos(b)*outerX,0.08,Math.sin(b)*outerZ];let c=(i%6<3)?[.25,.27,.3]:[.29,.31,.34];quad(innerA,outerA,outerB,innerB,c,o);let edge=[Math.cos(a)*(outerX+.4),.12,Math.sin(a)*(outerZ+.4)],edgeB=[Math.cos(b)*(outerX+.4),.12,Math.sin(b)*(outerZ+.4)];quad(outerA,edge,edgeB,outerB,[.92,.91,.82],o);let ie=[Math.cos(a)*(innerX-.4),.12,Math.sin(a)*(innerZ-.4)],ieb=[Math.cos(b)*(innerX-.4),.12,Math.sin(b)*(innerZ-.4)];quad(ie,innerA,innerB,ieb,[.92,.91,.82],o);}return mesh(o);}
+function grassMesh(color=[.23,.55,.25]){let o=[];quad([-250,0,-250],[250,0,-250],[250,0,250],[-250,0,250],color,o);return mesh(o);}
+function bind(m){gl.bindBuffer(gl.ARRAY_BUFFER,m.b);gl.enableVertexAttribArray(loc.p);gl.vertexAttribPointer(loc.p,3,gl.FLOAT,false,24,0);gl.enableVertexAttribArray(loc.col);gl.vertexAttribPointer(loc.col,3,gl.FLOAT,false,24,12);}
+const identity=()=>new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
+function model(x,y,z,ang,sx=1,sy=1,sz=1){let c=Math.cos(ang),s=Math.sin(ang);return new Float32Array([c*sx,0,-s*sx,0,0,sy,0,0,s*sz,0,c*sz,0,x,y,z,1]);}
+function perspective(fovy,aspect,near,far){let f=1/Math.tan(fovy/2),nf=1/(near-far);return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)*nf,-1,0,0,2*far*near*nf,0]);}
+function lookAt(eye,center,up){let z=norm(sub(eye,center)),x=norm(cross(up,z)),y=cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1]);}
+function mul(a,b){let o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o;}
+const sub=(a,b)=>a.map((v,i)=>v-b[i]),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm=a=>{let l=Math.hypot(...a)||1;return a.map(v=>v/l)};
+let activeTrack=0,activeDriver=0,activeDifficulty=1;const trackConfigs=[{name:'جزیرهٔ سبز',outerX:43,outerZ:33,innerX:31,innerZ:21,grass:[.23,.55,.25],sky:[.48,.76,.91]},{name:'درهٔ شنی',outerX:46,outerZ:29,innerX:34,innerZ:18,grass:[.68,.52,.29],sky:[.91,.68,.39]},{name:'شب نئونی',outerX:40,outerZ:35,innerX:28,innerZ:23,grass:[.10,.16,.27],sky:[.08,.12,.25]}];let grass=grassMesh(trackConfigs[0].grass),road=trackMesh();const body=cube(2.2,.65,3.4,[.88,.12,.08]),nose=cube(1.55,.35,1.15,[1,.32,.08]),seat=cube(.9,.8,.8,[.12,.18,.23]),wheel=cube(.48,.55,.85,[.07,.08,.1]),glass=cube(1.05,.42,.7,[.25,.72,.88]);
+const rivals=[{phase:1.05,rate:.48,color:[.08,.32,.95]},{phase:2.9,rate:.43,color:[.98,.72,.08]},{phase:4.55,rate:.51,color:[.15,.8,.3]}].map(r=>({...r,body:cube(2.05,.62,3.15,r.color),nose:cube(1.4,.3,1.0,[.95,.95,.95])}));
+rivals.forEach((r,i)=>r.rate=[.48,.43,.51][i]*[.78,1,1.22][activeDifficulty]);
+let x=0,z=27,heading=Math.PI/2,speed=0,paused=false,gameStarted=false,countdownRemaining=0,lap=1,elapsed=0,prevX=0,prevAngle=0,driftCharge=0,turbo=0,finished=false,hitFlash=0,cameraX=0,cameraZ=27,fruitCount=0,padCooldown=0,collisionCooldown=0;let heldItem=null,shield=0,slowEffect=0,clockEffect=0,itemToastUntil=0;const keys=new Set();addEventListener('keydown',e=>{let k=e.key.toLowerCase();keys.add(k);if(k.startsWith('arrow')||k===' ')e.preventDefault();if(k==='r'){resetRace(false);}if((k==='e'||k==='enter')&&gameStarted&&!paused&&!finished&&countdownRemaining<=0&&menu.classList.contains('hidden'))useItem();});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+function draw(m,mat){bind(m);gl.uniformMatrix4fv(loc.model,false,mat);gl.drawArrays(gl.TRIANGLES,0,m.count);}
+function resetRace(withCountdown=true){const cfg=trackConfigs[activeTrack];heldItem=null;shield=0;slowEffect=0;clockEffect=0;fruitCount=0;padCooldown=0;collisionCooldown=0;fruitPickups.forEach(f=>f.taken=false);rivals.forEach((r,i)=>{r.rate=[.48,.43,.51][i]*[.78,1,1.22][activeDifficulty];r.phase=[1.05,2.9,4.55][i];r.progress=0;r.stun=0;r.lap=1;r.prevPhase=r.phase;});boxes.forEach(b=>b.cooldown=0);x=0;z=(cfg.outerZ+cfg.innerZ)/2;heading=Math.PI/2;speed=0;lap=1;elapsed=0;prevX=0;prevAngle=0;driftCharge=0;turbo=0;finished=false;hitFlash=0;paused=false;cameraX=x;cameraZ=z;if(withCountdown){gameStarted=true;countdownRemaining=3;menu.classList.add('hidden');document.getElementById('finish').classList.remove('show');}}
+const hazardMesh=cube(1.0,.9,1.0,[.96,.36,.06]),treeTrunk=cube(.6,2.1,.6,[.34,.18,.08]),treeTop=cube(2.0,2.1,2.0,[.08,.42,.18]),lineLight=cube(.6,.08,.7,[.95,.95,.82]);
+// Collectible fruit and boost pads are original placeholder meshes, not ripped CTR assets.
+const fruitMesh=cube(.48,.48,.48,[1.0,.18,.12]),fruitLeaf=cube(.18,.12,.24,[.2,.85,.18]),boostPad=cube(2.4,.12,3.2,[1.0,.3,.04]),boostStripe=cube(.22,.14,2.5,[1.0,.88,.2]);
+const fruitPickups=Array.from({length:12},(_,i)=>({angle:.35+i*Math.PI/6,taken:false}));
+const boostPads=Array.from({length:3},(_,i)=>({angle:1.6+i*Math.PI*2/3}));
+// CTR-inspired item crates: collectible question-mark boxes with randomized power-ups.
+const boxMesh=cube(1.35,1.35,1.35,[1.0,.72,.06]),qBar=cube(.22,.18,.08,[1,.98,.72]),qDot=cube(.22,.22,.08,[1,.98,.72]);
+const boxes=Array.from({length:6},(_,i)=>({angle:.9+i*Math.PI/3,cooldown:0}));
+const itemNames={turbo:'🔥 توربو',missile:'🚀 موشک',bomb:'💣 بمب',shield:'🛡️ سپر',beaker:'🧪 بشر شیمیایی',clock:'⏱️ اختلال رقیب'};
+function toast(msg){const el=document.getElementById('itemtoast');el.textContent=msg;el.style.display='block';itemToastUntil=performance.now()+1500;}
+function useItem(){
+ if(!heldItem){toast('هنوز آیتمی نداری!');return;}
+ const item=heldItem;heldItem=null;
+ if(item==='turbo'){turbo=2.8;toast('🔥 توربو فعال شد!');}
+ else if(item==='shield'){shield=5;toast('🛡️ سپر فعال شد!');}
+ else if(item==='missile'){
+  const target=rivals.reduce((best,r)=>{const [rx,rz]=getTrackPoint(r.phase);const d=Math.hypot(x-rx,z-rz);return !best||d<best.d?{r,d}:best;},null);
+  if(target&&target.d<48){target.r.stun=2.0;toast('🚀 موشک به نزدیک‌ترین رقیب رسید!');}else toast('🚀 موشک شلیک شد، اما رقیبی در برد نبود.');
+ }else if(item==='bomb'){
+  const hit=rivals.filter(r=>{const [rx,rz]=getTrackPoint(r.phase);return Math.hypot(x-rx,z-rz)<15;});
+  hit.forEach(r=>r.stun=1.5);toast(hit.length?'💣 انفجار! رقیب نزدیک کند شد.':'💣 انفجار! رقیبی در محدوده نبود.');
+ }else if(item==='beaker'){
+  slowEffect=2.5;speed*=.55;toast('🧪 بشر شیمیایی استفاده شد!');
+ }else if(item==='clock'){
+  clockEffect=3.5;toast('⏱️ زمان رقیب‌ها برای مدت کوتاهی کند شد!');
+ }
+}
+function getTrackPoint(angle,scale=1){const cfg=trackConfigs[activeTrack];return [Math.sin(angle)*((cfg.outerX+cfg.innerX)/2)*scale,Math.cos(angle)*((cfg.outerZ+cfg.innerZ)/2)*scale];}
+function frame(t){const dt=Math.min((t-(frame.last||t))/1000,.04);frame.last=t; if(gameStarted&&countdownRemaining>0){countdownRemaining=Math.max(0,countdownRemaining-dt);const cd=document.getElementById('countdown');cd.textContent=countdownRemaining>0?String(Math.ceil(countdownRemaining)):'GO!';cd.classList.add('show');if(countdownRemaining===0){setTimeout(()=>cd.classList.remove('show'),450);}}if(!paused&&!finished&&gameStarted&&countdownRemaining<=0){elapsed+=dt;let gas=keys.has('w')||keys.has('arrowup'),brake=keys.has('s')||keys.has('arrowdown'),drifting=keys.has(' '),steer=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0);if(turbo>0)turbo=Math.max(0,turbo-dt);if(padCooldown>0)padCooldown=Math.max(0,padCooldown-dt);if(collisionCooldown>0)collisionCooldown=Math.max(0,collisionCooldown-dt);if(shield>0)shield=Math.max(0,shield-dt);if(slowEffect>0)slowEffect=Math.max(0,slowEffect-dt);if(clockEffect>0)clockEffect=Math.max(0,clockEffect-dt);let accel=(gas?12:0)+(turbo>0?5:0);speed=Math.max(-5,Math.min(25,speed+accel*dt-(brake?19:0)*dt-1.0*dt*Math.sign(speed)));let grip=drifting?.72:1;heading+=steer*(.45+Math.abs(speed)*.035)*dt*Math.sign(speed||1)*grip;x+=Math.sin(heading)*speed*dt;z+=Math.cos(heading)*speed*dt;if(drifting&&Math.abs(steer)>0&&Math.abs(speed)>5)driftCharge+=dt;else if(driftCharge>.45){turbo=Math.min(2.4,.8+driftCharge*.3);driftCharge=0;}else driftCharge=Math.max(0,driftCharge-dt*1.4);let cfg=trackConfigs[activeTrack],a=(cfg.outerX+cfg.innerX)/2,b=(cfg.outerZ+cfg.innerZ)/2,ellipse=(x*x)/(a*a)+(z*z)/(b*b);if(ellipse>1.16||ellipse<.66){speed*=.94;}const angle=(Math.atan2(x/a,z/b)+Math.PI*2)%(Math.PI*2);if(prevAngle>5.45&&angle<.75){lap++;if(lap>3){finished=true;document.getElementById('finishsummary').textContent='زمان نهایی: '+document.getElementById('timer').textContent.replace('زمان: ','')+' — کارتینگ تموم شد!';document.getElementById('finish').classList.add('show');}}prevAngle=angle;prevX=x;
+// Collision with track hazards: touching one costs speed and briefly flashes the HUD.
+for(let i=0;i<6;i++){const [hx,hz]=getTrackPoint(.55+i*Math.PI/3,.91);if(Math.hypot(x-hx,z-hz)<1.9&&Math.abs(speed)>2){if(shield<=0){speed*=.48;hitFlash=.65;}else toast('🛡️ سپر برخورد را دفع کرد!');}}
+// Pick up a question crate once; it respawns after a short cooldown.
+for(const b of boxes){if(b.cooldown>0)b.cooldown=Math.max(0,b.cooldown-dt);if(b.cooldown===0&&!heldItem){const [bx,bz]=getTrackPoint(b.angle,.91);if(Math.hypot(x-bx,z-bz)<2.1){b.cooldown=6;const pool=['turbo','missile','bomb','shield','beaker','clock'];heldItem=pool[Math.floor(Math.random()*pool.length)];toast('جعبه باز شد: '+itemNames[heldItem]+' — برای استفاده E را بزن');}}}
+// Collectible fruit adds score-like pickup progress.
+for(const f of fruitPickups){if(!f.taken){const [fx,fz]=getTrackPoint(f.angle,.91);if(Math.hypot(x-fx,z-fz)<1.8){f.taken=true;fruitCount++;toast('🍒 میوه جمع شد! '+fruitCount+' / ۱۲');}}}
+// Driving over a boost pad grants a short speed burst, with cooldown to prevent repeated triggering.
+if(padCooldown===0){for(const pad of boostPads){const [px,pz]=getTrackPoint(pad.angle,.91);if(Math.hypot(x-px,z-pz)<2.8){turbo=Math.max(turbo,1.15);padCooldown=2.0;toast('⚡ سکوی سرعت! توربو فعال شد');break;}}}
+// Simple kart-to-kart collision: both racers lose momentum instead of passing through each other.
+if(collisionCooldown===0){for(const r of rivals){const [rx,rz]=getTrackPoint(r.phase);if(Math.hypot(x-rx,z-rz)<2.35){if(shield<=0){speed*=.62;hitFlash=.45;}r.stun=Math.max(r.stun||0,.45);collisionCooldown=1.0;toast(shield>0?'🛡️ سپر برخورد با رقیب را دفع کرد!':'💥 برخورد با رقیب!');break;}}}
+if(hitFlash>0)hitFlash=Math.max(0,hitFlash-dt);
+}
+const dpr=Math.min(devicePixelRatio||1,1.5),w=Math.floor(innerWidth*dpr),h=Math.floor(innerHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}gl.enable(gl.DEPTH_TEST);let sky=trackConfigs[activeTrack].sky;gl.clearColor(sky[0],sky[1],sky[2],1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);cameraX+=(x-Math.sin(heading)*8-cameraX)*Math.min(1,dt*3.5);cameraZ+=(z-Math.cos(heading)*8-cameraZ)*Math.min(1,dt*3.5);let eye=[cameraX,5.4,cameraZ],target=[x,.65,z];let vp=mul(perspective(1.05,w/h,.1,500),lookAt(eye,target,[0,1,0]));gl.uniformMatrix4fv(loc.vp,false,vp);draw(grass,identity());draw(road,identity());
+// Checker-style start line across the road.
+const cfgNow=trackConfigs[activeTrack],midZ=(cfgNow.outerZ+cfgNow.innerZ)/2;for(let i=0;i<8;i++)draw(lineLight,model(0,.16,cfgNow.innerZ+(i+.5)*(cfgNow.outerZ-cfgNow.innerZ)/8,0,1,1,1));
+// Simple trackside trees provide visual landmarks.
+for(let i=0;i<12;i++){const [tx,tz]=getTrackPoint(i*Math.PI/6,1.16);draw(treeTrunk,model(tx,1.05,tz,0));draw(treeTop,model(tx,2.55,tz,0));}
+// Boost pads glow orange along the racing line.
+for(const pad of boostPads){const [px,pz]=getTrackPoint(pad.angle,.91);const pm=model(px,.2,pz,pad.angle);draw(boostPad,pm);for(let j=-1;j<=1;j++)draw(boostStripe,mul(pm,model(j*.55,.08,0,0,1,1,1)));}
+// Hazards are arranged around the road and slow the kart when hit.
+for(let i=0;i<6;i++){const [hx,hz]=getTrackPoint(.55+i*Math.PI/3,.91);draw(hazardMesh,model(hx,.55,hz,.15));}
+// Fruit pickups remain visible until collected.
+for(const f of fruitPickups){if(f.taken)continue;const [fx,fz]=getTrackPoint(f.angle,.91);const fm=model(fx,1.0+Math.sin(t*.004+f.angle)*.16,fz,t*.001+f.angle);draw(fruitMesh,fm);draw(fruitLeaf,mul(fm,model(0,.35,0,.4,.8,.6,.8)));}
+// Bright yellow question-mark crates placed on the racing line.
+for(const b of boxes){if(b.cooldown>0)continue;const [bx,bz]=getTrackPoint(b.angle,.91);const bm=model(bx,1.0,bz,b.angle);draw(boxMesh,bm);draw(qBar,mul(bm,model(0,.35,.72,0,1.2,1,1)));draw(qBar,mul(bm,model(.18,.19,.72,0,.8,1,1)));draw(qBar,mul(bm,model(-.12,.03,.72,0,.8,1,1)));draw(qDot,mul(bm,model(-.12,-.25,.72,0)));}
+const car=model(x,.33,z,heading);draw(body,car);draw(nose,mul(car,model(0,.24,1.0,0)));draw(seat,mul(car,model(0,.62,-.15,0)));draw(glass,mul(car,model(0,.78,-.05,0)));for(let sx of [-1,1])for(let sz of [-1,1])draw(wheel,mul(car,model(sx*1.13,-.02,sz*1.0,0)));for(const r of rivals){if(!paused&&gameStarted&&countdownRemaining<=0&&!finished){if(r.stun>0)r.stun=Math.max(0,r.stun-dt);else {const step=r.rate*dt*(clockEffect>0?.55:1);const oldPhase=r.phase;r.phase=(r.phase+step)%(Math.PI*2);if(oldPhase>5.45&&r.phase<.75)r.lap=(r.lap||1)+1;r.progress=(r.lap-1)*Math.PI*2+r.phase;}}let cfg=trackConfigs[activeTrack],rx=Math.sin(r.phase)*((cfg.outerX+cfg.innerX)/2),rz=Math.cos(r.phase)*((cfg.outerZ+cfg.innerZ)/2),ang=Math.atan2(37*Math.cos(r.phase),-27*Math.sin(r.phase));let rm=model(rx,.32,rz,ang);draw(r.body,rm);draw(r.nose,mul(rm,model(0,.23,.95,0)));for(let sx of [-1,1])for(let sz of [-1,1])draw(wheel,mul(rm,model(sx*1.05,-.02,sz*.95,0)));}const playerProgress=(lap-1)*Math.PI*2+((Math.atan2(x/((cfgNow.outerX+cfgNow.innerX)/2),z/((cfgNow.outerZ+cfgNow.innerZ)/2))+Math.PI*2)%(Math.PI*2));
+const standings=[{id:'player',progress:playerProgress}];for(let i=0;i<rivals.length;i++){const rv=rivals[i];standings.push({id:i,progress:(rv.lap-1)*Math.PI*2+rv.phase});}
+standings.sort((a,b)=>b.progress-a.progress);const playerPlace=standings.findIndex(v=>v.id==='player')+1;
+document.getElementById('position').textContent='جایگاه: '+playerPlace+' / '+standings.length;
+document.getElementById('position').style.color=playerPlace===1?'#7dff9a':playerPlace===4?'#ffb07d':'#ffffff';
+document.getElementById('speed').textContent='سرعت: '+Math.round(Math.abs(speed)*5)+' km/h';document.getElementById('lap').textContent=finished?'🏁 مسابقه تمام شد!':'پیست: '+trackConfigs[activeTrack].name+' | دور: '+Math.min(lap,3)+' / ۳';let mm=String(Math.floor(elapsed/60)).padStart(2,'0'),ss=String(Math.floor(elapsed%60)).padStart(2,'0'),cs=String(Math.floor((elapsed%1)*100)).padStart(2,'0');document.getElementById('timer').textContent='زمان: '+mm+':'+ss+'.'+cs;document.getElementById('turbo').textContent=hitFlash>0?'برخورد! سرعت کم شد':clockEffect>0?'⏱️ اختلال زمانی: '+clockEffect.toFixed(1)+'s':shield>0?'سپر: '+shield.toFixed(1)+'s':turbo>0?'توربو: فعال 🔥 '+turbo.toFixed(1)+'s':driftCharge>.1?'شارژ دریفت: '+Math.round(driftCharge*100)+'%':'توربو: آماده';document.getElementById('fruit').textContent='🍒 میوه: '+fruitCount+' / ۱۲';document.getElementById('item').textContent='🎁 آیتم: '+(heldItem?itemNames[heldItem]+' (E برای استفاده)': 'خالی — جعبهٔ ؟ پیدا کن');document.getElementById('item').style.color=heldItem?'#ffcf32':'#ffffff';if(performance.now()>itemToastUntil)document.getElementById('itemtoast').style.display='none';document.getElementById('panel').style.borderColor=hitFlash>0?'#ff5b38':'#ffffff55';
+// Draw a lightweight top-down minimap with player and rival markers.
+const mc=document.getElementById('minimap'),cx=mc.getContext('2d'),mw=mc.width,mh=mc.height;cx.clearRect(0,0,mw,mh);cx.fillStyle='#071421';cx.fillRect(0,0,mw,mh);const sx=(mw-28)/(cfgNow.outerX*2.5),sy=(mh-28)/(cfgNow.outerZ*2.5);cx.beginPath();cx.ellipse(mw/2,mh/2,cfgNow.outerX*sx,cfgNow.outerZ*sy,0,0,Math.PI*2);cx.ellipse(mw/2,mh/2,cfgNow.innerX*sx,cfgNow.innerZ*sy,0,0,Math.PI*2,true);cx.fillStyle='#7e8791';cx.fill('evenodd');cx.strokeStyle='#f5e9b9';cx.lineWidth=2;cx.stroke();function mapDot(px,pz,color,r=4){cx.beginPath();cx.arc(mw/2+px*sx,mh/2-pz*sy,r,0,Math.PI*2);cx.fillStyle=color;cx.fill();}for(const rv of rivals){const [rx,rz]=getTrackPoint(rv.phase);mapDot(rx,rz,'#66aaff',3.5);}mapDot(x,z,hitFlash>0?'#ff5b38':'#ffcf32',5);
+if(t-(frame.fpsTime||0)>500){document.getElementById('fps').textContent='FPS: '+Math.round(1000/Math.max(1,t-(frame.lastFrame||t)));frame.fpsTime=t;}frame.lastFrame=t;requestAnimationFrame(frame);}
+
+const menu=document.getElementById('menu');
+function setTrack(index){activeTrack=index;const cfg=trackConfigs[index];grass=grassMesh(cfg.grass);road=trackMesh(cfg.outerX,cfg.outerZ,cfg.innerX,cfg.innerZ);if(!gameStarted){x=0;z=(cfg.outerZ+cfg.innerZ)/2;cameraX=x;cameraZ=z-8;prevAngle=0;}document.querySelectorAll('[data-track]').forEach(b=>b.classList.toggle('active',Number(b.dataset.track)===index));}
+function setDriver(index){activeDriver=index;const colors=[[.88,.12,.08],[.08,.32,.95],[.98,.72,.08],[.15,.8,.3]];const c=colors[index];const replacement=cube(2.2,.65,3.4,c);body.b=replacement.b;body.count=replacement.count;document.querySelectorAll('[data-driver]').forEach(b=>b.classList.toggle('active',Number(b.dataset.driver)===index));}
+document.querySelectorAll('[data-track]').forEach(b=>b.addEventListener('click',()=>setTrack(Number(b.dataset.track))));
+document.querySelectorAll('[data-difficulty]').forEach(b=>b.addEventListener('click',()=>{activeDifficulty=Number(b.dataset.difficulty);document.querySelectorAll('[data-difficulty]').forEach(v=>v.classList.toggle('active',Number(v.dataset.difficulty)===activeDifficulty));rivals.forEach((r,i)=>r.rate=[.48,.43,.51][i]*[.78,1,1.22][activeDifficulty]);}));
+document.querySelectorAll('[data-driver]').forEach(b=>b.addEventListener('click',()=>setDriver(Number(b.dataset.driver))));
+document.getElementById('start').addEventListener('click',()=>{resetRace(true);});
+document.getElementById('resume').addEventListener('click',()=>{if(gameStarted){paused=false;menu.classList.add('hidden');}});
+document.getElementById('reset').addEventListener('click',()=>{resetRace(true);});
+document.getElementById('finishrestart').addEventListener('click',()=>{resetRace(true);});
+document.querySelectorAll('[data-key]').forEach(btn=>{const k=btn.dataset.key;const down=e=>{e.preventDefault();keys.add(k);};const up=e=>{e.preventDefault();keys.delete(k);};btn.addEventListener('pointerdown',down);btn.addEventListener('pointerup',up);btn.addEventListener('pointercancel',up);btn.addEventListener('pointerleave',up);});
+addEventListener('keydown',e=>{if(e.key.toLowerCase()==='p'&&gameStarted&&!menu.classList.contains('hidden'))return;if(e.key.toLowerCase()==='p'&&gameStarted&&paused){menu.classList.add('hidden');paused=false;}else if(e.key.toLowerCase()==='p'&&gameStarted&&!paused){paused=true;menu.classList.remove('hidden');}});
+setTrack(0);setDriver(0);cameraZ=z-8;requestAnimationFrame(frame);
+})();
+</script></body></html>
